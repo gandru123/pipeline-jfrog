@@ -34,7 +34,7 @@ pipeline{
         stage('configure jfrog'){
             steps{
                 script {
-                    def server = Artifactory.server 'jfrog_id'
+                    def server = Artifactory.server 'jenkins_id'
                     def buildInfo = Artifactory.newBuildInfo()
 
                     server.upload(
