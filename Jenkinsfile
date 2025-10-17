@@ -1,71 +1,76 @@
-pipeline{
-    agent{
+pipeline {
+    agent {
         label 'INFRA'
     }
-    triggers {
-        pollSCM ('* * * * *')
+
+    environment {
+        SERVER_ID = 'jfrog_java'
     }
-    stages{
-        stage('git repo'){
+
+    triggers {
+        pollSCM('* * * * *')
+    }
+
+    stages {
+        stage('Git Checkout') {
             steps {
-                git url: 'https://github.com/gandru123/spring-petclinic.git',branch:'main'
+                git url: 'https://github.com/gandru123/spring-petclinic.git', branch: 'main'
             }
         }
-        stage('install pulgin') {
-            steps{
+
+        stage('Build Java Project') {
+            steps {
                 sh 'mvn clean package'
             }
         }
-        stage('configure sonarqube') {
-            steps{
-                withCredentials([string(credentialsId:'sonar_id', variable:'SONAR_TOKEN')]){
-                    withSonarQubeEnv('MYSONARQUBE'){
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonar_id', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('MYSONARQUBE') {
                         sh '''
-                            mvn package sonar:sonar \
-                            -Dsonar.projectKey=gandru123_spring-petclinic \
-                            -Dsonar.organization=jenkins-java \
-                            -Dsonar.host.url=https://sonarcloud.io \
-                            -Dsonar.login=$SONAR_TOKEN
+                            mvn sonar:sonar \
+                                -Dsonar.projectKey=gandru123_spring-petclinic \
+                                -Dsonar.organization=jenkins-java \
+                                -Dsonar.host.url=https://sonarcloud.io \
+                                -Dsonar.login=$SONAR_TOKEN
                         '''
                     }
-            
+                }
             }
         }
-        stage('configure jfrog'){
-            steps{
+
+        stage('Upload to JFrog Artifactory') {
+            steps {
                 script {
-                    def server = Artifactory.server 'jenkins_id'
+                    def server = Artifactory.server(SERVER_ID)
                     def buildInfo = Artifactory.newBuildInfo()
 
-                    server.upload(
-                        spec: '''{
-                            "files": [
-                                {
-                                    "parttern": "target/*.jar" ,
-                                    "target" : "newrepo-libs-release-local/"
-                                    }
-                                ]
-                            }''',
-                            buildInfo: buildInfo
-                    )
-                    server.publishBuildInfo(buildInfo)
-                    
+                    server.upload(spec: '''{
+                        "files": [
+                            {
+                                "pattern": "target/*.jar",
+                                "target": "newrepo-libs-release-local/"
+                            }
+                        ]
+                    }''', buildInfo: buildInfo)
 
+                    server.publishBuildInfo(buildInfo)
                 }
             }
         }
     }
-    post{
-        always{
+
+    post {
+        always {
             junit '**/target/surefire-reports/*.xml'
             archiveArtifacts artifacts: '**/target/*.jar'
         }
-        success{
-            echo 'build is success'
+        success {
+            echo '✅ Build completed successfully!'
         }
-        failure{
-            echo 'build is fail'
+        failure {
+            echo '❌ Build failed!'
         }
     }
-
 }
