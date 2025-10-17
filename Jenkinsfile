@@ -22,14 +22,13 @@ pipeline{
                     withSonarQubeEnv('MYSONARQUBE'){
                         sh '''
                             mvn package sonar:sonar \
-                           -Dsonar.projectKey=gandru123_spring-petclinic \
-                           -Dsonar.organization=jenkins-java \
+                            -Dsonar.projectKey=gandru123_spring-petclinic \
+                            -Dsonar.organization=jenkins-java \
                             -Dsonar.host.url=https://sonarcloud.io \
-                            -Dsonar.login=$SONAR_TOKENarcloud.io \
                             -Dsonar.login=$SONAR_TOKEN
                         '''
                     }
-                }
+            
             }
         }
         stage('configure jfrog'){
