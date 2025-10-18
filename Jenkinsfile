@@ -51,7 +51,7 @@ pipeline {
                         "files": [
                             {
                                 "pattern": "target/*.jar",
-                                "target": "newrepo-libs-release-local/"
+                                "target": "newrepo-libs-release-local/gandru/spring-petclinic/"
                             }
                         ]
                     }''', 
