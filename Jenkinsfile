@@ -43,6 +43,7 @@ pipeline {
         stage('Upload to JFrog Artifactory') {
             steps {
                 script {
+                    sh 'ls -l target/*.jar || echo "NO JAR found in target"'
                     def server = Artifactory.server(SERVER_ID)
                     def buildInfo = Artifactory.newBuildInfo()
 
@@ -53,7 +54,8 @@ pipeline {
                                 "target": "newrepo-libs-release-local/"
                             }
                         ]
-                    }''', buildInfo: buildInfo)
+                    }''', 
+                    buildInfo: buildInfo)
 
                     server.publishBuildInfo(buildInfo)
                 }
@@ -67,10 +69,10 @@ pipeline {
             archiveArtifacts artifacts: '**/target/*.jar'
         }
         success {
-            echo '✅ Build completed successfully!'
+            echo 'Build completed successfully!'
         }
         failure {
-            echo '❌ Build failed!'
+            echo 'Build failed!'
         }
     }
 }
