@@ -41,26 +41,28 @@ pipeline {
             }
         }
 
-        stage('Upload to JFrog Artifactory') {
-            steps {
-                script {
-                    def server = Artifactory.server(SERVER_ID)
-                    def buildInfo = Artifactory.newBuildInfo()
+       stage('Upload to JFrog Artifactory') {
+    steps {
+        script {
+            def server = Artifactory.server('jfrog_java')  // your JFrog instance ID
+            def buildInfo = Artifactory.newBuildInfo()
 
-                    server.upload(spec: '''{
-                        "files": [
-                            {
-                                "pattern": "target/*.jar",
-                                "target": "newrepo-libs-release-local/gandru/spring-petclinic/"
-                            }
-                        ]
-                    }''', 
-                    buildInfo: buildInfo)
+            server.upload(
+                spec: """{
+                    "files": [
+                        {
+                            "pattern": "target/*.jar",
+                            "target": "java_spc-libs-release/gandru/spring-petclinic/"
+                        }
+                    ]
+                }""",
+                buildInfo: buildInfo
+            )
 
-                    server.publishBuildInfo(buildInfo)
-                }
-            }
+            server.publishBuildInfo(buildInfo)
         }
+    }
+}
     }
 
     post {
