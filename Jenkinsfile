@@ -3,11 +3,6 @@ pipeline {
         label 'INFRA'
     }
 
-    tools {
-        // 👇 Add this block so Jenkins sets up Maven automatically
-        maven 'Maven_3_9_11'   // Use the Maven name you configured in Jenkins > Manage Jenkins > Tools
-    }
-
     environment {
         SERVER_ID = 'jfrog_java'
         MAVEN_OPTS = "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
@@ -22,7 +17,6 @@ pipeline {
     }
 
     triggers {
-        // Poll SCM every minute
         pollSCM('* * * * *')
     }
 
@@ -72,7 +66,6 @@ pipeline {
                         }""",
                         buildInfo: buildInfo
                     )
-
                     server.publishBuildInfo(buildInfo)
                 }
             }
@@ -85,10 +78,10 @@ pipeline {
             archiveArtifacts artifacts: '**/target/*.jar'
         }
         success {
-            echo '✅ Build completed successfully!'
+            echo ' Build completed successfully!'
         }
         failure {
-            echo '❌ Build failed!'
+            echo ' Build failed!'
         }
     }
 }
