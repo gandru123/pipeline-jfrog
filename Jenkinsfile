@@ -3,12 +3,26 @@ pipeline {
         label 'INFRA'
     }
 
+    tools {
+        // 👇 Add this block so Jenkins sets up Maven automatically
+        maven 'Maven_3_9_11'   // Use the Maven name you configured in Jenkins > Manage Jenkins > Tools
+    }
+
     environment {
         SERVER_ID = 'jfrog_java'
-         MAVEN_OPTS = "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED"
+        MAVEN_OPTS = "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED \
+                      --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED"
     }
 
     triggers {
+        // Poll SCM every minute
         pollSCM('* * * * *')
     }
 
@@ -41,28 +55,28 @@ pipeline {
             }
         }
 
-       stage('Upload to JFrog Artifactory') {
-    steps {
-        script {
-            def server = Artifactory.server('jfrog_java')  // your JFrog instance ID
-            def buildInfo = Artifactory.newBuildInfo()
+        stage('Upload to JFrog Artifactory') {
+            steps {
+                script {
+                    def server = Artifactory.server('jfrog_java')
+                    def buildInfo = Artifactory.newBuildInfo()
 
-            server.upload(
-                spec: """{
-                    "files": [
-                        {
-                            "pattern": "target/*.jar",
-                            "target": "java_spc-libs-release/gandru/spring-petclinic/"
-                        }
-                    ]
-                }""",
-                buildInfo: buildInfo
-            )
+                    server.upload(
+                        spec: """{
+                            "files": [
+                                {
+                                    "pattern": "target/*.jar",
+                                    "target": "java_spc-libs-release/gandru/spring-petclinic/"
+                                }
+                            ]
+                        }""",
+                        buildInfo: buildInfo
+                    )
 
-            server.publishBuildInfo(buildInfo)
+                    server.publishBuildInfo(buildInfo)
+                }
+            }
         }
-    }
-}
     }
 
     post {
@@ -71,10 +85,10 @@ pipeline {
             archiveArtifacts artifacts: '**/target/*.jar'
         }
         success {
-            echo 'Build completed successfully!'
+            echo '✅ Build completed successfully!'
         }
         failure {
-            echo 'Build failed!'
+            echo '❌ Build failed!'
         }
     }
 }
